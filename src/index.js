@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import Promise from 'bluebird';
 
 import auth from './routes/auth';
+import users from './routes/users';
 
 dotenv.config(); // To set up env
 const app = express(); 
@@ -25,6 +26,7 @@ mongoose.connect(process.env.MONGODB_URL, { useMongoClient: true }); // IMPORTAN
 // // This status is not okay and throws an error in our React code and we catch and display this error from the server to the user
 
 app.use('/api/auth', auth);
+app.use('/api/users', users);
 
 // Define route
 app.get('/*', (req, res) => {

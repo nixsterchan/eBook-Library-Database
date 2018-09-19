@@ -1,12 +1,14 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import uniqueValidator from 'mongoose-unique-validator';
 
 // TODO: Add uniqueness and email validation for email field
 const schema = new mongoose.Schema(
     {
-        email: { type: String, required: true, lowercase: true, index: true },
-        passwordHash: { type: String, required: true }
+        email: { type: String, required: true, lowercase: true, index: true, unique: true},
+        passwordHash: { type: String, required: true },
+        confirmed: { type: Boolean, default: false }
     }, 
     { timestamps: true } // Second argument we provide here is a time stamp, which handles created and updates as , handled for us
 );
@@ -15,6 +17,11 @@ const schema = new mongoose.Schema(
 schema.methods.isValidPassword = function isValidPassword(password) {
     // Returns boolean depending on the result of the comparison of the hashes with bcrypt
     return bcrypt.compareSync(password, this.passwordHash);
+};
+
+// For setting password
+schema.methods.setPassword = function setPassword(password) {
+    this.passwordHash = bcrypt.hashSync(password, 10);
 };
 
 // Generates our JSON web tokens
@@ -35,9 +42,13 @@ schema.methods.generateJWT = function generateJWT() {
 schema.methods.toAuthJSON = function toAuthJSON() {
     return {
         email: this.email,
-        token: this.generateJWT()
+        token: this.generateJWT(),
+        confirmed: this.confirmed
     }
 }
+
+// To validate that email is unique, we use the uniqueValidator, where we just use it as a plugin
+schema.plugin(uniqueValidator, { message: "This Email Is Already In Use"});
 
 // First argument is the model name, which is pluralized by mongoose, 
 // and this becomes the name of the collection that is searched in MongoDB database
