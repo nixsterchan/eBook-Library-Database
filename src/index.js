@@ -1,13 +1,30 @@
 import express from 'express';
 import path from 'path'; // Just the node module
+import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+import Promise from 'bluebird';
 
+import auth from './routes/auth';
+
+dotenv.config(); // To set up env
 const app = express(); 
 
-// Make post request to /api/auth route
-app.post('/api/auth', (req, res) => {
-    res.status(400).json({ errors: { global: "Invalid Credentials" } }); // Global key
-}); // We create auth route where it always responds with error object and status 400
-// This status is not okay and throws an error in our React code and we catch and display this error from the server to the user
+// When we instantiate application
+app.use(bodyParser.json()); // We only use json for now 
+
+// We override the built in mongo promise library with Bluebird promise library
+mongoose.Promise = Promise;
+
+mongoose.connect(process.env.MONGODB_URL, { useMongoClient: true }); // IMPORTANT. To connect to MongoDB
+
+// // Make post request to /api/auth route
+// app.post('/api/auth', (req, res) => {
+//     res.status(400).json({ errors: { global: "Invalid Credentials" } }); // Global key
+// }); // We create auth route where it always responds with error object and status 400
+// // This status is not okay and throws an error in our React code and we catch and display this error from the server to the user
+
+app.use('/api/auth', auth);
 
 // Define route
 app.get('/*', (req, res) => {
